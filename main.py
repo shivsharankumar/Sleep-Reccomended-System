@@ -33,7 +33,7 @@ example = (
 
 user_input = st.text_area("Paste your sleep data here:", value=example, height=180)
 
-llm_mode = st.checkbox("Use LLM-based recommendation (Groq)")
+# llm_mode = st.checkbox("Use LLM-based recommendation (Groq)")
 
 # --- Parsing logic ---
 def parse_sleep_data(text: str) -> List[Dict]:
@@ -304,48 +304,48 @@ def handle_sleep_analysis():
                     st.error("❌ Could not parse sleep data. Check format.")
                     return
                 
-                if llm_mode:
+                # if llm_mode:
                     # LLM Analysis
-                    try:
-                        llm_result = generate_sleep_recommendation_llm(data)
-                        if not llm_result.strip():
-                            st.error("🚫 AI returned empty response.")
-                            return
-                        
-                        st.markdown(f"""
-                        <div style='background:linear-gradient(135deg,#667eea,#764ba2);padding:2px;border-radius:15px;margin:1rem 0'>
-                            <div style='background:#fff;border-radius:13px;padding:1.5rem;color:#1a1a2e'>
-                                <h3 style='display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;color:#1a1a2e'>
-                                    Sleep Coach
-                                </h3>
-                                <div style='line-height:1.6;color:#374151;font-size:0.9rem'>
-                                    {llm_result}
-                       
-                        """, unsafe_allow_html=True)
-                        
-                    except Exception as e:
-                        st.error(f"🚨 AI Error: {e}")
-                        # Fallback to standard analysis
-                        avg, min_s, max_s, diagnosis, recommendations = analyze_sleep(data)
-                        html_report = generate_mobile_sleep_report(data, avg, min_s, max_s, diagnosis, recommendations, [])
-                        components.html(html_report, height=900, scrolling=True)
-                
-                else:
-                    # Standard Analysis
+                try:
+                    llm_result = generate_sleep_recommendation_llm(data)
+                    if not llm_result.strip():
+                        st.error("🚫 AI returned empty response.")
+                        return
+                    
+                    st.markdown(f"""
+                    <div style='background:linear-gradient(135deg,#667eea,#764ba2);padding:2px;border-radius:15px;margin:1rem 0'>
+                        <div style='background:#fff;border-radius:13px;padding:1.5rem;color:#1a1a2e'>
+                            <h3 style='display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;color:#1a1a2e'>
+                                Sleep Coach
+                            </h3>
+                            <div style='line-height:1.6;color:#374151;font-size:0.9rem'>
+                                {llm_result}
+                    
+                    """, unsafe_allow_html=True)
+                    
+                except Exception as e:
+                    st.error(f"🚨 AI Error: {e}")
+                    # Fallback to standard analysis
                     avg, min_s, max_s, diagnosis, recommendations = analyze_sleep(data)
-                    llm_assessment = llm_sleep_disorder_assessment(data)
-                    
-                    html_report = generate_mobile_sleep_report(data, avg, min_s, max_s, diagnosis, recommendations, llm_assessment)
+                    html_report = generate_mobile_sleep_report(data, avg, min_s, max_s, diagnosis, recommendations, [])
                     components.html(html_report, height=900, scrolling=True)
+                
+                # else:
+                #     # Standard Analysis
+                #     avg, min_s, max_s, diagnosis, recommendations = analyze_sleep(data)
+                #     llm_assessment = llm_sleep_disorder_assessment(data)
                     
-                    # Download option
-                    st.download_button(
-                        label="📱 Download Report",
-                        data=html_report,
-                        file_name=f"sleep_report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                        mime="text/html",
-                        use_container_width=True
-                    )
+                #     html_report = generate_mobile_sleep_report(data, avg, min_s, max_s, diagnosis, recommendations, llm_assessment)
+                #     components.html(html_report, height=900, scrolling=True)
+                    
+                #     # Download option
+                #     st.download_button(
+                #         label="📱 Download Report",
+                #         data=html_report,
+                #         file_name=f"sleep_report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                #         mime="text/html",
+                #         use_container_width=True
+                #     )
                 
             except Exception as e:
                 st.error(f"🚨 Error: {e}")
