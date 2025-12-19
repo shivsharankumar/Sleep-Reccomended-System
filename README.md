@@ -1,50 +1,74 @@
-# Sleep Coach Streamlit App
+# 😴 Sleep Coach App
 
-This project provides a modern, mobile-friendly sleep analysis and coaching app using Streamlit. It supports both rule-based and LLM (Groq) powered recommendations and generates beautiful, shareable HTML reports.
+A modern, production-ready sleep analysis tool that generates personalized coaching recommendations. The app allows users to upload their sleep log (CSV), analyzes the data for healthy patterns and risks, and provides AI-powered insights using Groq.
 
-## Features
-- Paste your 7-day sleep data in natural language format
-- Get instant sleep analysis, diagnosis, and recommendations
-- Optionally use Groq LLM for advanced, AI-powered insights
-- Mobile-optimized, visually attractive HTML reports
-- Download and share your sleep report
+## ✨ Features
 
-## Requirements
+- **CSV Data Upload**: Easily upload your sleep diary for instant analysis.
+- **AI Coach**: Integrated with Groq LLM (e.g., Mixtral 8x7b) to generate empathetic, personalized feedback.
+- **Sleep Metrics**: Automatically calculates average sleep, debt/surplus, and consistency stats.
+- **Risk Assessment**: Heuristic detection of potential issues like insomnia or irregular sleep patterns.
+- **Mobile-Friendly Reports**: Generates downloadable, beautifully styled HTML reports.
+
+## 🚀 Getting Started
+
+### Prerequisites
+
 - Python 3.8+
-- `streamlit`
-- `groq` (for LLM mode)
-- `python-dotenv` (for environment variables)
+- A Groq API Key (optional, for AI features)
 
-## Setup
-1. Clone the repository.
-2. Install dependencies:
+### Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/shivsharankumar/Sleep-Reccomended-System.git
+   cd Sleep-Reccomended-System
+   ```
+
+2. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
-3. (Optional) Set up your Groq API key and model in a `.env` file:
+
+3. **Configure Environment**:
+   Create a `.env` file in the root directory:
    ```env
-   GROQ_API_KEY=your_groq_api_key
-   GROQ_MODEL=your_groq_model_name
+   GROQ_API_KEY=your_groq_api_key_here
+   GROQ_MODEL=mixtral-8x7b-32768
    ```
 
-## Running the App
+### Running the App
+
+Run the Streamlit application:
 ```bash
-streamlit run sleep_coach_app.py
+streamlit run main.py
 ```
-- Paste your sleep data in the text area.
-- Choose LLM mode for AI-powered recommendations (optional).
-- Click "Analyze Sleep Data" to view your report.
-- Download or share your report as needed.
 
-## Customization
-- You can adjust the UI, add more analysis rules, or change the LLM prompt in the code.
-- The app is designed for easy extension and integration.
+## 📊 Data Format
 
-## File Structure
-- `sleep_coach_app.py` - Main Streamlit app (now mobile-friendly and LLM-ready)
-- `llm_sleep_recommend.py` - LLM integration for Groq
-- `requirements.txt` - Python dependencies
-- `.env` - (Optional) Your API keys and model names
+The app accepts a CSV file with the following columns (case-insensitive):
 
-## License
-MIT 
+| Column | Description | Example |
+| :--- | :--- | :--- |
+| `Date` | Date of the entry | `Jul 09` |
+| `Sleep` | Bedtime | `10:30 PM` |
+| `Wake` | Wake up time | `7:00 AM` |
+| `Duration` | Total hours slept | `8.5` |
+
+**Sample CSV:**
+```csv
+Date,Sleep,Wake,Duration
+Jul 09,10:30 PM,7:00 AM,8.5
+Jul 10,11:00 PM,6:30 AM,7.5
+```
+
+## 📂 Project Structure
+
+- `main.py`: Core application logic and UI.
+- `llm_sleep_recommend.py`: Module for Groq LLM integration and error handling.
+- `requirements.txt`: Project dependencies.
+- `test_sleep_data.csv`: Sample data file for testing.
+
+## 📄 License
+
+MIT

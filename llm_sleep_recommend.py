@@ -1,18 +1,68 @@
 import os
-from groq import Groq
-from typing import List, Dict
+import logging
+from typing import List, Dict, Optional
 from dotenv import load_dotenv
+from groq import Groq, GroqError
 
+# Load environment variables
 load_dotenv()
 
-groq_client = Groq()
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-def sleep_data_to_prompt(sleep_data: List[Dict]) -> str:
-    # Format the sleep data as a readable string for the LLM
+# Initialize Groq client with error handling
+try:
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY environment variable is not set")
+    groq_client = Groq(api_key=api_key)
+except Exception as e:
+    logger.error(f"Failed to initialize Groq client: {e}")
+    groq_client = None
+
+def get_groq_model() -> str:
+    """Retrieve the Groq model from environment variables with a default fallback."""
+    return os.environ.get("GROQ_MODEL", "mixtral-8x7b-32768")
+
+def format_sleep_data_for_prompt(sleep_data: List[Dict]) -> str:
+    """
+    Format the list of sleep data dictionaries into a readable string for the LLM.
+    
+    Args:
+        sleep_data: List of dictionaries containing date, sleep time, wake time, and duration.
+        
+    Returns:
+        Formatted string representation of the sleep data.
+    """
     lines = []
     for d in sleep_data:
-        lines.append(f"{d['date']}: Slept at {d['sleep']}, woke at {d['wake']} ({d['duration']} hours)")
-    data_str = "\n".join(lines)
+        try:
+            line = f"{d.get('date', 'Unknown')}: Slept at {d.get('sleep', '?')}, woke at {d.get('wake', '?')} ({d.get('duration', 0)} hours)"
+            lines.append(line)
+        except Exception as e:
+            logger.warning(f"Skipping malformed data entry: {d} - {e}")
+            continue
+    return "\n".join(lines)
+
+def generate_sleep_recommendation_llm(sleep_data: List[Dict]) -> str:
+    """
+    Generate a sleep recommendation using the LLM based on provided sleep data.
+    
+    Args:
+        sleep_data: List of sleep data entries.
+        
+    Returns:
+        String containing the LLM's recommendation or an error message.
+    """
+    if not groq_client:
+        return "Error: LLM client is not initialized. Please check API configuration."
+
+    if not sleep_data:
+        return "No sleep data provided for analysis."
+
+    data_str = format_sleep_data_for_prompt(sleep_data)
+    
     prompt = f"""
 You are a sleep coach AI. Write a message (100–120 words). Analyze the following 7 days of sleep data and:
 - First, determine if the sleep is good or not (based on average duration, consistency, and healthy sleep guidelines).
@@ -25,66 +75,31 @@ SLEEP DATA:
 
 Your response:
 """
-#     prompt = f"""
-# You are a supportive sleep coach who writes like a trusted friend. Each day, analyze the past 7 days of sleep data and craft a brief check-in (100–120 words) using the structure and rules below.
 
-# ⚠️ DO NOT BREAK THESE RULES:
-# - Never start with greetings like “Good morning.” Jump directly into the insights.
-# - When referencing light therapy, always say “retimer glasses.” Never use possessives or adjectives like “your glasses” or “those retimers.”
-# - Use paragraphs and bullet points where appropriate.
+    try:
+        model = get_groq_model()
+        completion = groq_client.chat.completions.create(
+            model=model,
+            messages=[
+                {
+                    'role': 'user',
+                    'content': prompt
+                }
+            ],
+            temperature=0.7,
+            max_tokens=300
+        )
+        return completion.choices[0].message.content
+    except GroqError as ge:
+        logger.error(f"Groq API error: {ge}")
+        return "I'm having trouble connecting to the sleep coach AI right now. Please try again later."
+    except Exception as e:
+        logger.error(f"Unexpected error during LLM generation: {e}")
+        return "An unexpected error occurred while generating recommendations."
 
-# 🎯 Emoji Guidelines (Add When Relevant):
-# - Sleep/Wind Down: 😴 🛌  
-# - Wake/Energy: ☀️ 🌞  
-# - Sleep Surplus: 💪 🔋 🟢  
-# - Sleep Debt: 🥱 😓 😵  
-# - Consistency/Rhythm: ⏱️  
-# - Encouragement: 👏 🌟 🔥 🙌 ✅
-
-# ✅ Required Content:
-# - Always include last night’s **bedtime, wake time, and total duration**.
-# - Briefly compare to the **previous night** (e.g., earlier, later, similar).
-# - Comment on **bedtime consistency** over recent nights.
-# - If total sleep is **under 7 hrs**, mention the shortfall, describe it as **sleep debt**, and specify how much was added.
-# - If over 8 hrs, call it a **surplus** and state how much debt was reduced.
-# - Always mention the **7-day rolling sleep debt** or **surplus**.
-# - If the sleep-wake rhythm is **aligned** (asleep 9–11 PM, awake 5–7 AM), **do not** mention retimer glasses.
-# - If misaligned, recommend using **retimer glasses** within 30 minutes of waking.
-
-# 🧠 Health & Diagnosis Logic:
-# - If sleep is consistently short, highly irregular, or erratic, gently diagnose possible **sleep disorders** like insomnia, sleep apnea, hypersomnia, or circadian rhythm disruption — but keep tone caring, not clinical.
-# - Only mention a sleep disorder if supported by the data.
-# - Provide **simple, supportive recommendations** for improvement when needed (e.g., earlier wind-down, screen curfew, sleep environment).
-
-# 🔁 Style and Tone:
-# - Vary sentence structure, phrasing, and tone daily to keep it natural.
-# - Use a tone that’s caring, playful, or curious based on recent sleep trends.
-# - Occasionally call out patterns (e.g., “third early night in a row” or “bedtimes still scattered”).
-# - End with varied, motivating closings — avoid repeating the same line.
-# - Always be clear, concise, and supportive.
-
-# SLEEP DATA:
-# {data_str}
-# """
-
-    return prompt
-
-def generate_sleep_recommendation_llm(sleep_data: List[Dict]) -> str:
-    prompt = sleep_data_to_prompt(sleep_data)
-    completion = groq_client.chat.completions.create(
-        model=os.environ['GROQ_MODEL'],
-        messages=[
-            {
-                'role': 'user',
-                'content': prompt
-            }
-        ]
-    )
-    return completion.choices[0].message.content
-
-# Example usage:
 if __name__ == "__main__":
-    sleep_data = [
+    # Test data for standalone execution
+    test_data = [
         {"date": "Jul 09", "sleep": "8:14 PM", "wake": "7:12 AM", "duration": 10.9},
         {"date": "Jul 08", "sleep": "12:18 AM", "wake": "7:45 AM", "duration": 7.4},
         {"date": "Jul 07", "sleep": "11:54 PM", "wake": "5:31 AM", "duration": 5.6},
@@ -93,4 +108,4 @@ if __name__ == "__main__":
         {"date": "Jul 04", "sleep": "10:28 PM", "wake": "6:46 AM", "duration": 8.3},
         {"date": "Jul 03", "sleep": "12:14 AM", "wake": "7:55 AM", "duration": 7.7},
     ]
-    print(generate_sleep_recommendation_llm(sleep_data)) 
+    print(generate_sleep_recommendation_llm(test_data))
