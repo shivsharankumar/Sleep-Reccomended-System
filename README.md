@@ -5,7 +5,7 @@ A modern, production-ready sleep analysis tool that generates personalized coach
 ## ✨ Features
 
 - **CSV Data Upload**: Easily upload your sleep diary for instant analysis.
-- **AI Coach**: Integrated with Groq LLM (e.g., Mixtral 8x7b) to generate empathetic, personalized feedback.
+- **AI Coach**: Integrated with Groq LLM (e.g., llama-3.3-70b-versatile) to generate empathetic, personalized feedback.
 - **Sleep Metrics**: Automatically calculates average sleep, debt/surplus, and consistency stats.
 - **Risk Assessment**: Heuristic detection of potential issues like insomnia or irregular sleep patterns.
 - **Mobile-Friendly Reports**: Generates downloadable, beautifully styled HTML reports.
@@ -34,7 +34,7 @@ A modern, production-ready sleep analysis tool that generates personalized coach
    Create a `.env` file in the root directory:
    ```env
    GROQ_API_KEY=your_groq_api_key_here
-   GROQ_MODEL=mixtral-8x7b-32768
+   GROQ_MODEL=llama-3.3-70b-versatile
    ```
 
 ### Running the App
