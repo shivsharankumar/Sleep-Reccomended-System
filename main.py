@@ -328,15 +328,24 @@ def main():
     with col1:
         st.subheader("1. Upload Data")
         uploaded_file = st.file_uploader("Choose a CSV file", type=['csv'], help="Required columns: Date, Sleep, Wake, Duration")
+        use_example = st.checkbox("Use example data")
         
-        if uploaded_file:
+        file_to_process = None
+        
+        if use_example:
+            file_to_process = "test_sleep_data.csv"
+            st.markdown(f"<div class='success-box'>✅ Using example file 'test_sleep_data.csv'.</div>", unsafe_allow_html=True)
+        elif uploaded_file:
+            file_to_process = uploaded_file
             st.markdown(f"<div class='success-box'>✅ File '{uploaded_file.name}' ready for analysis.</div>", unsafe_allow_html=True)
             
+        if file_to_process:
             if st.button("🚀 Analyze Sleep Data", type="primary"):
                 with st.spinner("Analyzing sleep patterns..."):
-                    data = parse_csv_data(uploaded_file)
+                    data = parse_csv_data(file_to_process)
                     
                     if not data:
+                        st.error("Could not parse data.")
                         return # Error handled in parsing
                         
                     # 1. AI Analysis
@@ -383,7 +392,7 @@ def main():
                         mime="text/html"
                     )
         else:
-            st.info("👆 Please upload a CSV file to get started.")
+            st.info("👆 Please upload a CSV file or select example data to get started.")
 
     with col2:
         st.subheader("  ℹ️ Format Guide")
